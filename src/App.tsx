@@ -6,7 +6,7 @@ import {
 import { 
   TrendingDown, 
   Wallet, ShieldCheck, 
-  Coins, ArrowRightLeft, Key
+  Coins, ArrowRightLeft, Key, Image as ImageIcon, X
 } from 'lucide-react';
 import { ionicData } from './data';
 import './App.css';
@@ -14,6 +14,7 @@ import './App.css';
 function App() {
   const [activeTab, setActiveTab] = useState<'all' | '렌트' | '리스'>('all');
   const [activeMileage, setActiveMileage] = useState<10000 | 15000>(15000);
+  const [selectedImage, setSelectedImage] = useState<string | null>(null);
 
   const filteredQuotes = useMemo(() => {
     return ionicData.quotes.filter(q => {
@@ -28,14 +29,12 @@ function App() {
   const chartData = useMemo(() => {
     return filteredQuotes.map(q => {
       const diffFromBest = q.monthly - bestQuote.monthly;
-      const totalCost48 = q.monthly * 48 / 10000;
       return {
         name: q.company,
         monthly: q.monthly / 10000,
         deposit: q.deposit / 10000,
         residual: q.residual_value / 10000,
         diff: diffFromBest / 10000,
-        total48: totalCost48,
         type: q.type
       };
     });
@@ -43,6 +42,13 @@ function App() {
 
   const formatPrice = (price: number) => {
     return new Intl.NumberFormat('ko-KR').format(price);
+  };
+
+  const getImageUrl = (path: string) => {
+    // Vite serves public files from root in development and relative to base in production
+    // Since base is /ionic9_preview/, we use that prefix
+    const base = import.meta.env.BASE_URL;
+    return `${base}quotes/${path}`;
   };
 
   return (
@@ -53,7 +59,7 @@ function App() {
         </div>
         <h1 style={{ fontSize: '4rem', letterSpacing: '-0.02em', color: '#1d1d1f' }}>아이오닉 9 <span style={{ color: 'var(--accent)' }}>견적 심층 비교</span></h1>
         <p style={{ maxWidth: '700px', margin: '0 auto', fontSize: '1.2rem', color: '#6e6e73' }}>
-          월 납입금, 초기 보증금, 만기 시 인수 금액까지 3대 핵심 지표를 정밀 분석했습니다.
+          매달 내는 월 납입금부터 보증금, 만기 인수 금액까지 한눈에 비교하고 원본 견적서를 확인하세요.
         </p>
       </header>
 
@@ -139,6 +145,7 @@ function App() {
                 <th>보증금</th>
                 <th>만기 인수금</th>
                 <th>총 인수 비용</th>
+                <th>원본</th>
               </tr>
             </thead>
             <tbody>
@@ -154,6 +161,14 @@ function App() {
                     <td style={{ fontSize: '0.9rem', fontWeight: 700 }}>
                        {formatPrice(Math.round(totalAcquisition / 10000))}만원
                     </td>
+                    <td>
+                      <button 
+                        onClick={() => setSelectedImage(q.imagePath)}
+                        style={{ border: 'none', background: 'rgba(0, 113, 227, 0.1)', color: 'var(--accent)', padding: '6px 12px', borderRadius: '8px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.8rem', fontWeight: 600 }}
+                      >
+                        <ImageIcon size={14} /> 원본
+                      </button>
+                    </td>
                   </tr>
                 );
               })}
@@ -161,6 +176,36 @@ function App() {
           </table>
         </div>
       </section>
+
+      {/* Image Modal */}
+      {selectedImage && (
+        <div 
+          style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', background: 'rgba(0,0,0,0.8)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000, padding: '40px' }}
+          onClick={() => setSelectedImage(null)}
+        >
+          <div 
+            style={{ position: 'relative', maxWidth: '100%', maxHeight: '100%', background: '#fff', borderRadius: '20px', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div style={{ padding: '16px 24px', borderBottom: '1px solid #e0e0e0', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <h3 style={{ margin: 0 }}>견적서 원본 확인</h3>
+              <button 
+                onClick={() => setSelectedImage(null)}
+                style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: 'var(--text-sub)' }}
+              >
+                <X size={24} />
+              </button>
+            </div>
+            <div style={{ overflowY: 'auto', flex: 1, padding: '20px', textAlign: 'center' }}>
+              <img 
+                src={getImageUrl(selectedImage)} 
+                alt="Original Quote" 
+                style={{ maxWidth: '100%', height: 'auto', boxShadow: '0 10px 30px rgba(0,0,0,0.2)' }} 
+              />
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Decision Guide */}
       <section className="fade-in" style={{ animationDelay: '0.3s', marginBottom: '100px' }}>
