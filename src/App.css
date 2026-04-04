@@ -1,0 +1,6 @@
+/* App specific styles integrated in index.css or here */
+.price {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 1.1rem;
+  font-weight: 700;
+}
