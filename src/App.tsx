@@ -1,7 +1,7 @@
 import { useState, useMemo } from 'react';
 import { 
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, 
-  Legend
+  Legend, LabelList
 } from 'recharts';
 import { 
   TrendingDown, CheckCircle2,
@@ -245,9 +245,15 @@ function App() {
                 contentStyle={{ borderRadius: '16px', border: '1px solid #e0e0e0', boxShadow: '0 10px 30px rgba(0,0,0,0.1)' }}
               />
               <Legend verticalAlign="top" height={36}/>
-              <Bar dataKey="monthly" name="월 납입금 (x10k)" fill="var(--accent)" radius={[4, 4, 0, 0]} />
-              <Bar dataKey="deposit" name="보증금" fill="#ff9500" radius={[4, 4, 0, 0]} />
-              <Bar dataKey="residual" name="만기 인수금" fill="#28cd41" radius={[4, 4, 0, 0]} />
+              <Bar dataKey="monthly" name="월 납입금 (x10k)" fill="var(--accent)" radius={[4, 4, 0, 0]}>
+                <LabelList dataKey="monthly" position="top" style={{ fontSize: '10px', fill: 'var(--accent)', fontWeight: 700 }} />
+              </Bar>
+              <Bar dataKey="deposit" name="보증금" fill="#ff9500" radius={[4, 4, 0, 0]}>
+                <LabelList dataKey="deposit" position="top" style={{ fontSize: '10px', fill: '#ff9500', fontWeight: 700 }} />
+              </Bar>
+              <Bar dataKey="residual" name="만기 인수금" fill="#28cd41" radius={[4, 4, 0, 0]}>
+                <LabelList dataKey="residual" position="top" style={{ fontSize: '10px', fill: '#28cd41', fontWeight: 700 }} />
+              </Bar>
             </BarChart>
           </ResponsiveContainer>
         </div>
