@@ -253,48 +253,96 @@ function App() {
           </ResponsiveContainer>
         </div>
 
-        <div className="glass-panel table-container" style={{ background: '#fff', marginTop: '24px', padding: '0' }}>
-          <table style={{ minWidth: '600px' }}>
-            <thead>
-              <tr>
-                <th>금융사</th>
-                <th>월 납입금</th>
-                <th>주요 단독 혜택</th>
-                <th>원본</th>
-              </tr>
-            </thead>
-            <tbody>
-              {filteredQuotes.map((q: Quote, idx: number) => {
-                return (
-                  <tr key={idx}>
-                    <td style={{ fontWeight: 600 }}>
-                      <div style={{ display: 'flex', flexDirection: 'column' }}>
-                        {q.company}
-                        <span style={{ fontSize: '0.65rem', color: 'var(--text-sub)' }}>{q.type} | {q.mileage}km</span>
+        <div className="glass-panel" style={{ background: '#fff', marginTop: '24px', padding: '0', overflow: 'hidden' }}>
+          {/* Desktop Table View */}
+          <div className="desktop-only" style={{ overflowX: 'auto' }}>
+            <table style={{ width: '100%', minWidth: '700px', borderCollapse: 'collapse' }}>
+              <thead>
+                <tr style={{ borderBottom: '2px solid #f5f5f7' }}>
+                  <th style={{ textAlign: 'left', padding: '20px' }}>금융사 / 방식</th>
+                  <th style={{ textAlign: 'left', padding: '20px' }}>월 납입금</th>
+                  <th style={{ textAlign: 'left', padding: '20px' }}>주요 단독 혜택</th>
+                  <th style={{ textAlign: 'center', padding: '20px' }}>증빙</th>
+                </tr>
+              </thead>
+              <tbody>
+                {filteredQuotes.map((q: Quote, idx: number) => (
+                  <tr key={idx} style={{ borderBottom: '1px solid #f5f5f7' }}>
+                    <td style={{ padding: '20px' }}>
+                      <div style={{ fontWeight: 700, fontSize: '1rem' }}>{q.company}</div>
+                      <div style={{ fontSize: '0.75rem', color: 'var(--text-sub)', marginTop: '4px' }}>
+                        {q.type} | {q.mileage}km | {q.term}개월
                       </div>
                     </td>
-                    <td className="price" style={{ color: idx === 0 ? 'var(--accent)' : 'inherit' }}>{formatPrice(q.monthly)}원</td>
-                    <td>
-                      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px' }}>
-                        {q.benefits?.slice(0, 2).map((b: string, i: number) => (
-                           <span key={i} style={{ padding: '2px 6px', background: '#f5f5f7', borderRadius: '4px', fontSize: '0.65rem', border: '1px solid #eee' }}>{b}</span>
-                        ))}
-                        {(q.benefits?.length || 0) > 2 && <span style={{ fontSize: '0.65rem' }}>...</span>}
+                    <td style={{ padding: '20px' }}>
+                      <div className="price" style={{ color: idx === 0 ? 'var(--accent)' : 'inherit', fontSize: '1.2rem', fontWeight: 800 }}>
+                        {formatPrice(q.monthly)}원
                       </div>
                     </td>
-                    <td>
+                    <td style={{ padding: '20px' }}>
+                      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
+                        {q.benefits?.map((b: string, i: number) => (
+                          <span key={i} style={{ padding: '4px 10px', background: 'rgba(0,113,227,0.05)', borderRadius: '8px', fontSize: '0.75rem', color: 'var(--accent)', border: '1px solid rgba(0,113,227,0.1)' }}>{b}</span>
+                        )) || <span style={{ color: '#ccc', fontSize: '0.8rem' }}>-</span>}
+                      </div>
+                    </td>
+                    <td style={{ padding: '20px', textAlign: 'center' }}>
                       <button 
                         onClick={() => setSelectedImage(q.imagePath)}
-                        style={{ border: 'none', background: 'rgba(0, 113, 227, 0.1)', color: 'var(--accent)', padding: '4px 8px', borderRadius: '6px', cursor: 'pointer', fontSize: '0.7rem' }}
+                        style={{ border: 'none', background: '#f5f5f7', color: '#1d1d1f', padding: '8px 16px', borderRadius: '10px', cursor: 'pointer', fontSize: '0.85rem', fontWeight: 600 }}
                       >
-                         보기
+                         원본 확인
                       </button>
                     </td>
                   </tr>
-                );
-              })}
-            </tbody>
-          </table>
+                ))}
+              </tbody>
+            </table>
+          </div>
+
+          {/* Mobile Card List View */}
+          <div className="mobile-only" style={{ padding: '16px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
+            {filteredQuotes.map((q: Quote, idx: number) => (
+              <div 
+                key={idx} 
+                style={{ 
+                  background: '#f9f9fb', 
+                  borderRadius: '20px', 
+                  padding: '16px', 
+                  border: idx === 0 ? '1px solid var(--accent)' : '1px solid #eee',
+                  boxShadow: idx === 0 ? '0 4px 12px rgba(0, 113, 227, 0.1)' : 'none'
+                }}
+              >
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start', marginBottom: '12px' }}>
+                  <div>
+                    <div style={{ fontWeight: 800, fontSize: '1.1rem', color: '#1d1d1f' }}>{q.company}</div>
+                    <div style={{ fontSize: '0.75rem', color: 'var(--text-sub)', marginTop: '4px' }}>{q.type} • {q.mileage}km • {q.term}개월</div>
+                  </div>
+                  <button 
+                    onClick={() => setSelectedImage(q.imagePath)}
+                    style={{ background: '#fff', color: 'var(--accent)', padding: '6px 12px', borderRadius: '8px', cursor: 'pointer', fontSize: '0.75rem', fontWeight: 600, border: '1px solid #e0e0e0' }}
+                  >
+                    원본
+                  </button>
+                </div>
+                
+                <div style={{ marginBottom: '12px' }}>
+                  <div style={{ fontSize: '0.7rem', color: 'var(--text-sub)', marginBottom: '2px' }}>월 납입금</div>
+                  <div style={{ color: idx === 0 ? 'var(--accent)' : '#1d1d1f', fontSize: '1.4rem', fontWeight: 800 }}>
+                    {formatPrice(q.monthly)}<span style={{ fontSize: '1rem', fontWeight: 600 }}>원</span>
+                  </div>
+                </div>
+
+                {q.benefits && (
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
+                    {q.benefits.slice(0, 3).map((b: string, i: number) => (
+                      <span key={i} style={{ padding: '4px 8px', background: '#fff', borderRadius: '6px', fontSize: '0.65rem', color: '#6e6e73', border: '1px solid #e0e0e0' }}>{b}</span>
+                    ))}
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
         </div>
       </section>
 
