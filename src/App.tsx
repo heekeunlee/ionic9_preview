@@ -5,11 +5,12 @@ import {
 } from 'recharts';
 import { 
   TrendingDown, CheckCircle2,
-  Wallet, ShieldCheck, 
+  Wallet, 
   ArrowRightLeft, Key, X,
-  UserCheck, MessageSquare, Lightbulb
+  UserCheck, MessageSquare, Gift, Sparkles
 } from 'lucide-react';
 import { ionicData } from './data';
+import type { Quote } from './data';
 import './App.css';
 
 function App() {
@@ -17,6 +18,16 @@ function App() {
   const [activeMileage, setActiveMileage] = useState<10000 | 15000>(15000);
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
   const [strategy, setStrategy] = useState<'return' | 'takeover' | null>(null);
+
+  const formatPrice = (price: number) => {
+    return new Intl.NumberFormat('ko-KR').format(price);
+  };
+
+  const getTotalCost = (q: Quote) => {
+    const baseTotal = q.monthly * 48 + q.residual_value;
+    const finBenefit = q.financialBenefit || 0;
+    return baseTotal - finBenefit;
+  };
 
   const filteredQuotes = useMemo(() => {
     return ionicData.quotes.filter(q => {
@@ -42,10 +53,6 @@ function App() {
     });
   }, [filteredQuotes, bestQuote]);
 
-  const formatPrice = (price: number) => {
-    return new Intl.NumberFormat('ko-KR').format(price);
-  };
-
   const getImageUrl = (path: string) => {
     const base = import.meta.env.BASE_URL;
     return `${base}quotes/${path}`;
@@ -53,10 +60,10 @@ function App() {
 
   const strategyQuotes = useMemo(() => {
     if (strategy === 'takeover') {
-      return [...ionicData.quotes].sort((a, b) => (a.monthly * 48 + a.residual_value) - (b.monthly * 48 + b.residual_value));
+      return [...ionicData.quotes].sort((a, b) => getTotalCost(a) - getTotalCost(b));
     }
     return [...ionicData.quotes].sort((a, b) => a.monthly - b.monthly);
-  }, [strategy]);
+  }, [strategy, getTotalCost]); // Added getTotalCost to deps for safety
 
   const recommended = strategyQuotes[0];
 
@@ -68,8 +75,7 @@ function App() {
         </div>
         <h1 style={{ fontSize: window.innerWidth < 480 ? '2.2rem' : '4rem', letterSpacing: '-0.02em', color: '#1d1d1f' }}>아이오닉 9 <span style={{ color: 'var(--accent)' }}>구매 전략 컨설팅</span></h1>
         <p style={{ maxWidth: '750px', margin: '0 auto', fontSize: window.innerWidth < 480 ? '1rem' : '1.2rem', color: '#6e6e73' }}>
-          자영업자 전문 상담가로서 최적의 포트폴리오를 제공합니다.<br/>
-          퇴거 전략을 선택해 주세요.
+          자영업자 전문 상담가로서 각 사별 단독 혜택까지 반영한 최적의 포트폴리오를 제공합니다.
         </p>
 
         {/* Strategy Buttons */}
@@ -114,38 +120,57 @@ function App() {
       {strategy && (
         <section className="fade-in" style={{ marginBottom: '40px' }}>
           <div className="glass-panel" style={{ background: '#fff', border: `2px solid ${strategy === 'return' ? 'var(--accent)' : 'var(--success)'}`, padding: window.innerWidth < 480 ? '20px 16px' : '40px', borderRadius: '24px' }}>
-             <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '20px' }}>
+             <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '20px' }}>
               <MessageSquare color={strategy === 'return' ? 'var(--accent)' : 'var(--success)'} size={20} />
-              <h2 style={{ marginBottom: 0, fontSize: window.innerWidth < 480 ? '1.2rem' : '1.6rem' }}>맞춤형 분석 보고</h2>
+              <h2 style={{ marginBottom: 0, fontSize: window.innerWidth < 480 ? '1.2rem' : '1.6rem' }}>사별 단독 혜택 반영 분석 보고</h2>
             </div>
             
             <div className="grid" style={{ alignItems: 'start', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))' }}>
               <div>
-                <div style={{ fontSize: '0.8rem', color: 'var(--text-sub)', marginBottom: '4px' }}>최적 견적 업체</div>
+                <div style={{ fontSize: '0.8rem', color: 'var(--text-sub)', marginBottom: '4px' }}>종합 추천 파트너</div>
                 <div style={{ fontSize: '1.6rem', fontWeight: 800, color: '#1d1d1f', marginBottom: '20px' }}>
                   {recommended.company} <span style={{ color: strategy === 'return' ? 'var(--accent)' : 'var(--success)' }}>{recommended.type}</span>
                 </div>
                 
                 <div style={{ padding: '16px', background: '#f5f5f7', borderRadius: '16px', marginBottom: '20px' }}>
-                  <div style={{ fontSize: '0.8rem', color: 'var(--text-sub)' }}>{strategy === 'return' ? '월 예상 지출' : '총 취득 예상 원가'}</div>
+                  <div style={{ fontSize: '0.8rem', color: 'var(--text-sub)' }}>{strategy === 'return' ? '월 실질 부담' : '혜택 포함 총 취득가'}</div>
                   <div style={{ fontSize: '1.8rem', fontWeight: 800, margin: '4px 0' }}>
-                    {strategy === 'return' ? `월 ${formatPrice(recommended.monthly)}원` : `${formatPrice(Math.round((recommended.monthly * 48 + recommended.residual_value)/10000))}만원`}
+                    {strategy === 'return' ? `월 ${formatPrice(recommended.monthly)}원` : `${formatPrice(Math.round(getTotalCost(recommended)/10000))}만원`}
                   </div>
                 </div>
+
+                {recommended.benefits && (
+                  <div style={{ marginBottom: '20px' }}>
+                    <div style={{ fontSize: '0.85rem', fontWeight: 700, marginBottom: '10px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                      <Gift size={16} color="var(--accent)" /> 단독 혜택 리스트
+                    </div>
+                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
+                      {recommended.benefits.map((b: string, i: number) => (
+                        <span key={i} style={{ background: 'rgba(0,113,227,0.05)', color: 'var(--accent)', padding: '4px 8px', borderRadius: '6px', fontSize: '0.7rem', fontWeight: 600 }}>{b}</span>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </div>
               
-              <div style={{ background: '#f5f5f7', padding: '20px', borderRadius: '20px' }}>
-                <h3 style={{ fontSize: '1rem', marginBottom: '12px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                  <Lightbulb size={18} color="#ff9500" /> 핵심 상담 포인트
+              <div style={{ background: '#f5f5f7', padding: '24px', borderRadius: '20px' }}>
+                <h3 style={{ fontSize: '1rem', marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <Sparkles size={18} color="#ff9500" /> 전략 및 혜택 분석
                 </h3>
                 <ul style={{ listStyle: 'none', padding: 0, fontSize: '0.85rem' }}>
-                  <li style={{ marginBottom: '10px', display: 'flex', gap: '10px' }}>
+                  <li style={{ marginBottom: '12px', display: 'flex', gap: '10px' }}>
                     <CheckCircle2 size={16} color={strategy === 'return' ? 'var(--accent)' : 'var(--success)'} style={{ flexShrink: 0 }} />
-                    {strategy === 'return' ? '사업자 절세 혜택(연 1.5천만)에 최적화된 리스크 관리 모델' : '잔존가치를 전략적으로 설계한 최저 총액 인수 모델'}
+                    <div>
+                      {recommended.company === 'RS 컴퍼니' ? 
+                        '버텍스 900 썬팅 업그레이드 등 약 150만원 상당의 프리미엄 신차 패키지가 제공되어 반납 시에도 가장 쾌적한 운행이 가능합니다.' :
+                        recommended.company.includes('에이원') ?
+                        '첫 달 렌트료 전액 지원으로 초기 비용 부담을 획기적으로 낮췄습니다. 실질적인 현금 혜택이 가장 큽니다.' :
+                        '사후 관리 및 승계 지원 혜택이 우수하여 장기적인 운용 안정성이 높습니다.'}
+                    </div>
                   </li>
                   <li style={{ display: 'flex', gap: '10px' }}>
                     <CheckCircle2 size={16} color={strategy === 'return' ? 'var(--accent)' : 'var(--success)'} style={{ flexShrink: 0 }} />
-                    {strategy === 'return' ? '사고 이력 걱정 없는 면책금 기반 렌트 관리 체계' : '보험 경력 유지 및 자산 소유 가치 극대화'}
+                    <div>{strategy === 'return' ? '월 지출 증빙을 통한 최고 수준의 절세 효율을 보장합니다.' : '금융 혜택과 잔존가치 설계를 종합했을 때 가장 합리적인 인수 조건입니다.'}</div>
                   </li>
                 </ul>
               </div>
@@ -190,7 +215,7 @@ function App() {
       {/* Multimetric Comparison */}
       <section id="comparison-table" className="fade-in" style={{ animationDelay: '0.2s', marginBottom: '40px' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px', flexWrap: 'wrap', gap: '8px' }}>
-          <h2 style={{ fontSize: '1.2rem' }}>핵심 지표 비교</h2>
+          <h2 style={{ fontSize: '1.2rem' }}>핵심 지표 및 혜택 비교</h2>
           <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
              <div className="tab-nav">
               <button className={`tab-btn ${activeMileage === 10000 ? 'active' : ''}`} onClick={() => setActiveMileage(10000)}>1만</button>
@@ -229,22 +254,34 @@ function App() {
         </div>
 
         <div className="glass-panel table-container" style={{ background: '#fff', marginTop: '24px', padding: '0' }}>
-          <table>
+          <table style={{ minWidth: '600px' }}>
             <thead>
               <tr>
                 <th>금융사</th>
-                <th>방식</th>
                 <th>월 납입금</th>
+                <th>주요 단독 혜택</th>
                 <th>원본</th>
               </tr>
             </thead>
             <tbody>
-              {filteredQuotes.map((q, idx) => {
+              {filteredQuotes.map((q: Quote, idx: number) => {
                 return (
                   <tr key={idx}>
-                    <td style={{ fontWeight: 600 }}>{q.company}</td>
-                    <td><span className={`badge ${q.type === '렌트' ? 'badge-mid' : 'badge-low'}`} style={{ fontSize: '0.7rem' }}>{q.type}</span></td>
+                    <td style={{ fontWeight: 600 }}>
+                      <div style={{ display: 'flex', flexDirection: 'column' }}>
+                        {q.company}
+                        <span style={{ fontSize: '0.65rem', color: 'var(--text-sub)' }}>{q.type} | {q.mileage}km</span>
+                      </div>
+                    </td>
                     <td className="price" style={{ color: idx === 0 ? 'var(--accent)' : 'inherit' }}>{formatPrice(q.monthly)}원</td>
+                    <td>
+                      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px' }}>
+                        {q.benefits?.slice(0, 2).map((b: string, i: number) => (
+                           <span key={i} style={{ padding: '2px 6px', background: '#f5f5f7', borderRadius: '4px', fontSize: '0.65rem', border: '1px solid #eee' }}>{b}</span>
+                        ))}
+                        {(q.benefits?.length || 0) > 2 && <span style={{ fontSize: '0.65rem' }}>...</span>}
+                      </div>
+                    </td>
                     <td>
                       <button 
                         onClick={() => setSelectedImage(q.imagePath)}
@@ -290,24 +327,6 @@ function App() {
           </div>
         </div>
       )}
-
-      {/* Decision Guide (Static) */}
-      <section className="fade-in" style={{ animationDelay: '0.3s', marginBottom: '60px' }}>
-        <div className="grid" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))' }}>
-          <div className="glass-panel" style={{ background: '#0071e3', color: '#fff', padding: '24px' }}>
-            <h3 style={{ color: '#fff', fontSize: '1.2rem', marginBottom: '12px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <ArrowRightLeft size={20} /> 반납형 전략
-            </h3>
-            <p style={{ color: 'rgba(255,255,255,0.9)', marginBottom: '16px', fontSize: '0.85rem' }}>매달 지출을 최소화하며 신용도 영향을 받지 않는 장기렌트 상품군 추천</p>
-          </div>
-          <div className="glass-panel" style={{ background: '#f5f5f7', padding: '24px' }}>
-             <h3 style={{ fontSize: '1.2rem', marginBottom: '12px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <ShieldCheck size={20} /> 인수형 전략
-            </h3>
-            <p style={{ color: 'var(--text-sub)', marginBottom: '16px', fontSize: '0.85rem' }}>만기 인수 가격을 낮게 설계하여 저렴한 할부 효과를 누리는 리스 상품군 추천</p>
-          </div>
-        </div>
-      </section>
     </div>
   );
 }
